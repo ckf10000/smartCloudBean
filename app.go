@@ -10,35 +10,16 @@
 package main
 
 import (
-	"fmt"
-	"io"
-	"log"
 	"net/http"
-	"os"
 
-	// "github.com/ckf10000/gologger/core"
+	"github.com/ckf10000/gologger/core"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	r := gin.Default()
-	// 设置日志输出格式
-	gin.DefaultWriter = io.MultiWriter(os.Stdout)
-
-	// 设置 Gin 的日志输出格式
-	r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
-		// 自定义日志格式
-		return fmt.Sprintf("%s - [%s] - [%s] - [%s] - %s - %s\n",
-			param.TimeStamp.Format("2006-01-02 15:04:05.000"),
-			param.Request.URL,
-			param.StatusCode,
-			param.Latency,
-			param.ClientIP,
-			param.ErrorMessage,
-		)
-	}))
-	// log := core.NewLogger("debug", "", "", 0, false, true, false)
-	// log.Info("开启启动web服务...")
+	log := core.NewLogger("debug", "", "", 0, false, true, false)
+	log.Info("开启启动web服务...")
 
 	r.GET("/hello", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
