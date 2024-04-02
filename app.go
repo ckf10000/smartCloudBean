@@ -41,6 +41,6 @@ func main() {
 	})
 
 	if err := r.Run(":8080"); err != nil {
-		log.Fatal("Server failed to start: ", err)
+		log.Fatal("Server failed to start: %s", err)
 	}
 }
