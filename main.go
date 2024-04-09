@@ -12,16 +12,13 @@ package main
 import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/os/gctx"
 )
 
 func main() {
 
 	s := g.Server()
 	s.BindHandler("/", func(r *ghttp.Request) {
-		r.Response.write("你好，我的世界！")
+		r.Response.Write("你好，我的世界！")
 	})
-
-	s.Run(gctx.New())
-
+	s.Run()
 }
