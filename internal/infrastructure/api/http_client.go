@@ -51,7 +51,7 @@ func (c *HTTPClient) Get(path string, params url.Values, headers map[string]stri
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("GET request failed with status code: %d", resp.StatusCode)
+		return fmt.Errorf("GET request <%s> failed with status code: %d", reqURL, resp.StatusCode)
 	}
 
 	return json.NewDecoder(resp.Body).Decode(result)
@@ -88,7 +88,7 @@ func (c *HTTPClient) Post(path string, params url.Values, headers map[string]str
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("POST request failed with status code: %d", resp.StatusCode)
+		return fmt.Errorf("POST request <%s> failed with status code: %d", reqURL, resp.StatusCode)
 	}
 
 	return json.NewDecoder(resp.Body).Decode(result)

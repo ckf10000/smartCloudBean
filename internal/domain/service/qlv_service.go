@@ -17,7 +17,7 @@ import (
 
 // LockOrder 发送 LockOrder 请求并解析响应
 func (s *HTTPService) LockOrder(requestData qlv.LockOrderRequest) (interface{}, error) {
-	path := s.baseURL + "/LockOrder.ashx"
+	path := "/LockOrder.ashx"
 	params := url.Values{}
 	headers := map[string]string{}
 

@@ -17,11 +17,13 @@ import (
 )
 
 func TestQlvLockOrder(t *testing.T) {
-	httpService := service.NewHTTPService("https://pekdazhicheng.qlv88.com/")
+	httpService := service.NewHTTPService("https://pekdazhicheng.qlv88.com")
 	// 构造请求参数
 	requestData := qlv.LockOrderRequest{
-		UserID:  "186",
-		SignKey: "9a68295ec90b1fc10ab94331c882bab9",
+		CommonRequest: qlv.CommonRequest{
+			UserID:  "186",
+			SignKey: "9a68295ec90b1fc10ab94331c882bab9",
+		},
 		RequestData: qlv.LockOrderRequestData{
 			PolicyName:  "测试-XC",
 			OrderSrcCat: "国内",
