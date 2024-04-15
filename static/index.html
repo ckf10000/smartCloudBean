@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单</title>
+    <!-- 引入 Bootstrap CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- 引入 jQuery -->
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <!-- 引入 Bootstrap JS -->
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <!-- 引入分页插件 -->
+    <script src="js/jquery.twbsPagination.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        h1 {
+            margin-bottom: 100px;
+            /* 设置标题底部的外边距 */
+        }
+
+        .custom-label {
+            margin-right: 10px;
+            /* 设置标签右侧的间距 */
+            display: inline-block;
+            /* 将标签显示为内联块元素 */
+            width: 120px;
+            /* 设置标签的固定宽度 */
+            text-align: right;
+            /* 文本右对齐 */
+        }
+
+        .custom-input {
+            width: 100%;
+            /* 设置输入框宽度为100% */
+            box-sizing: border-box;
+            /* 盒模型设置为边框盒 */
+        }
+
+        .btn-frozen {
+            background-color: yellow;
+            color: black;
+            /* 如果需要调整文字颜色 */
+        }
+
+        /* 去掉按钮的边框线条颜色 */
+        .btn-custom {
+            border-color: transparent;
+            /* 设置边框颜色为透明 */
+        }
+
+        th {
+            white-space: nowrap;
+            /* 禁止表头文字换行 */
+        }
+
+        td {
+            white-space: nowrap;
+            /* 禁止表头文字换行 */
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            /* 水平滚动 */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="text-center">订单列表</h1>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="d-flex align-items-center">
+                    <label for="preOrderIdInput" class="custom-label mr-2 mb-0">订单ID：</label>
+                    <input type="text" class="form-control custom-input" id="preOrderIdInput" placeholder="输入劲旅订单ID">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex align-items-center mb-3">
+                    <label for="passengerInput" class="custom-label mr-2">乘客：</label>
+                    <input type="text" class="form-control custom-input" id="passengerInput" placeholder="输入乘客姓名">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex align-items-center mb-3">
+                    <button class="btn btn-primary btn-custom mr-4" id="orderQuery" onclick="searchOrders()">查询</button>
+                    <div style="width: 40px;"></div> <!-- 这里设置一个空的div，宽度为40px，可以根据需要调整 -->
+                    <button class="btn btn-primary btn-custom" id="refreshBtn"
+                        onclick="toggleAutoRefresh()">冻结自动刷新</button>
+                </div>
+            </div>
+        </div>
+        <div class="table-container"> <!-- 表格容器 -->
+            <table class="table table-bordered" id="orderTable">
+                <thead>
+                    <tr>
+                        <th style="display: none;">ID</th>
+                        <th>劲旅订单ID</th>
+                        <th>劲旅出单金额</th>
+                        <th>航班</th>
+                        <th>乘客</th>
+                        <th>年龄阶段</th>
+                        <th>携程订单号</th>
+                        <th>支付金额</th>
+                        <th>支付方式</th>
+                        <th>行程单号</th>
+                        <th>携程账号</th>
+                        <th>账号密码</th>
+                        <th>出票平台</th>
+                        <th>出票账号</th>
+                        <th>采购账号类型</th>
+                        <th>采购账号</th>
+                        <th>采购时间</th>
+                    </tr>
+                </thead>
+                <tbody id="orderBody">
+                    <!-- 订单数据将在此处动态填充 -->
+                </tbody>
+            </table>
+        </div>
+        <div id="paginationContainer" class="text-center">
+            <!-- 分页按钮将在此处动态填充 -->
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let pageSize = 10; // 每页显示的数据条数
+        let autoRefreshInterval;
+
+        function fetchOrders(preOrderId = '', passenger = '', page = 1) {
+            const url = `/api/v1/orders?pre_order_id=${preOrderId}&passenger=${passenger}&page=${page}&limit=${pageSize}`;
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(orderData => {
+                    if (!JSON.stringify(orderData) === '{}') {
+                        throw new Error('Data format exception.');
+                    }
+                    return orderData.data;
+                })
+                .then(data => {
+                    const orders = data.data || [];
+                    const totalCount = data.total_count || 0;
+                    const tbody = document.getElementById('orderBody');
+                    tbody.innerHTML = '';
+                    orders.forEach(order => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td style="display: none;">${order.id}</td>
+                            <td>${order.pre_order_id || ''}</td>
+                            <td>${order.pre_sale_amount || ''}</td>
+                            <td>${order.flight || ''}</td>
+                            <td>${order.passenger || ''}</td>
+                            <td>${order.age_stage || ''}</td>
+                            <td>${order.ctrip_order_id || ''}</td>
+                            <td>${order.payment_amount || ''}</td>
+                            <td>${order.payment_method || ''}</td>
+                            <td>${order.itinerary_id || ''}</td>
+                            <td>${order.ctrip_username || ''}</td>
+                            <td>${order.user_pass || ''}</td>
+                            <td>${order.out_pf || ''}</td>
+                            <td>${order.out_ticket_account || ''}</td>
+                            <td>${order.pay_account_type || ''}</td>
+                            <td>${order.pay_account || ''}</td>
+                            <td>${order.create_time || ''}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+
+                    // 初始化分页器
+                    $('#paginationContainer').twbsPagination({
+                        totalPages: Math.ceil(totalCount / pageSize),
+                        visiblePages: 5,
+                        onPageClick: function (event, page) {
+                            currentPage = page;
+                            fetchOrders(preOrderId, passenger, currentPage);
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Failed to fetch orders:', error);
+                });
+        }
+
+        function searchOrders() {
+            const preOrderId = document.getElementById('preOrderIdInput').value.trim();
+            const passenger = document.getElementById('passengerInput').value.trim();
+            fetchOrders(preOrderId, passenger);
+        }
+
+        function toggleAutoRefresh() {
+            const refreshBtn = document.getElementById('refreshBtn');
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                refreshBtn.textContent = '开启自动刷新';
+                refreshBtn.classList.remove('btn-frozen'); // 移除冻结状态类
+            } else {
+                searchOrders(); // 开始时立即获取数据
+                autoRefreshInterval = setInterval(searchOrders, 10000); // 每隔10秒自动刷新
+                refreshBtn.textContent = '冻结自动刷新';
+                refreshBtn.classList.add('btn-frozen'); // 添加冻结状态类
+            }
+        }
+
+        toggleAutoRefresh(); // 启动自动刷新
+    </script>
+</body>
+
+</html>
