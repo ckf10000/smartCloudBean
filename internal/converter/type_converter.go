@@ -15,13 +15,13 @@ import (
 )
 
 // parseQueryInt 解析 URL 查询参数为整数
-func ConvertQueryInt(value string, defaultValue int) int {
+func ConvertQueryInt(value string, nullDefault, exceptionDefault int) int {
 	if value == "" {
-		return defaultValue
+		return nullDefault
 	}
 	result, err := strconv.Atoi(value)
 	if err != nil {
-		return defaultValue
+		return exceptionDefault
 	}
 	return result
 }

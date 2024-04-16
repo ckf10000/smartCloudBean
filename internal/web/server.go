@@ -30,10 +30,9 @@ func StartServer(log *log.FileLogger, db *gorm.DB) {
 
 	r.GET("/api/v1/orders", func(c *gin.Context) {
 		passenger := c.DefaultQuery("passenger", "")
-		preOrderID := converter.ConvertQueryInt(c.DefaultQuery("pre_order_id", "-1"), -1)
-		page := converter.ConvertQueryInt(c.DefaultQuery("page", "1"), 1)
-		limit := converter.ConvertQueryInt(c.DefaultQuery("limit", "10"), 10)
-
+		preOrderID := converter.ConvertQueryInt(c.Query("pre_order_id"), -1, 0)
+		page := converter.ConvertQueryInt(c.DefaultQuery("page", "1"), 1, 1)
+		limit := converter.ConvertQueryInt(c.DefaultQuery("limit", "10"), 10, 10)
 		orders, total_count, err := orderService.FindOrders(preOrderID, passenger, page, limit, log)
 		paginationDta := dto.ResponsePaginationOrder{
 			Data:       orders,
