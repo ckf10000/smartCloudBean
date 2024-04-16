@@ -28,6 +28,10 @@ func StartServer(log *log.FileLogger, db *gorm.DB) {
 
 	orderService := services.NewOrderService(db, log) // 初始化应用服务
 
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"code": 200, "message": "查询成功", "data": struct{}{}})
+	})
+
 	r.GET("/api/v1/orders", func(c *gin.Context) {
 		passenger := c.DefaultQuery("passenger", "")
 		preOrderID := converter.ConvertQueryInt(c.Query("pre_order_id"), -1, 0)
