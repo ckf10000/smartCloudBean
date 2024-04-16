@@ -35,8 +35,7 @@ func StartServer(log *log.FileLogger, db *gorm.DB) {
 		limit := converter.ConvertQueryInt(c.DefaultQuery("limit", "10"), 10)
 
 		orders, total_count, err := orderService.FindOrders(preOrderID, passenger, page, limit, log)
-
-		paginationDta := dto.PaginationOrder{
+		paginationDta := dto.ResponsePaginationOrder{
 			Data:       orders,
 			TotalCount: total_count,
 			Page:       page,

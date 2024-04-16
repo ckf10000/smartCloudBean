@@ -17,7 +17,7 @@ import (
 )
 
 type OrderRepository interface {
-	FindOrders(preOrderID int, passenger string, page int, limit int, log *log.FileLogger) ([]dto.Order, int, error)
+	FindOrders(preOrderID int, passenger string, page int, limit int, log *log.FileLogger) ([]dto.ResponseOrder, int, error)
 }
 
 type orderRepository struct {
@@ -29,11 +29,11 @@ func NewOrderRepository(db *gorm.DB, log *log.FileLogger) OrderRepository {
 	return &orderRepository{db, log}
 }
 
-func (r *orderRepository) FindOrders(preOrderID int, passenger string, page int, limit int, log *log.FileLogger) ([]dto.Order, int, error) {
-	var orders []dto.Order
+func (r *orderRepository) FindOrders(preOrderID int, passenger string, page int, limit int, log *log.FileLogger) ([]dto.ResponseOrder, int, error) {
+	var orders []dto.ResponseOrder
 	var totalRows int64
 
-	query := r.db.Table("t_orders").Select("id, pre_order_id, pre_sale_amount, flight, passenger, age_stage, ctrip_order_id, payment_amount, payment_method, itinerary_id, ctrip_username, user_pass, out_pf, out_ticket_account, pay_account_type, pay_account, create_time")
+	query := r.db.Table("t_orders").Select("id, pre_order_id, pre_sale_amount, flight, passenger, age_stage, ctrip_order_id, payment_amount, payment_method, itinerary_id, ctrip_username, user_pass, out_pf, out_ticket_account, pay_account_type, pay_account, DATE_FORMAT(create_time, '%Y-%m-%d %H:%i:%s') AS create_time")
 	if preOrderID != -1 {
 		query = query.Where("pre_order_id = ?", preOrderID)
 	}
