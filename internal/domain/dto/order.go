@@ -26,7 +26,7 @@ type ResponseOrder struct {
 	OutTicketAccount string  `json:"out_ticket_account"`
 	PayAccountType   string  `json:"pay_account_type"`
 	PayAccount       string  `json:"pay_account"`
-	CreateTime       string  `json:"create_time"`
+	PaymentTime      string  `json:"payment_time"`
 }
 
 // Response 结构体用于表示接收 JSON 响应的数据结构

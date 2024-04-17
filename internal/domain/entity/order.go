@@ -40,6 +40,7 @@ type OrderEntity struct {
 	PayAccount        string    `json:"pay_account"`
 	Oper              string    `json:"oper"`
 	IsDeleted         int       `json:"is_deleted"`
+	PaymentTime       time.Time `json:"payment_time"`
 	CreateTime        time.Time `json:"create_time"`
 	UpdateTime        time.Time `json:"update_time"`
 }
