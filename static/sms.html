@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>长沙云豆商务</title>
+    <!-- 引入 Bootstrap CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- 引入 jQuery -->
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <!-- 引入 Bootstrap JS -->
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <!-- 引入分页插件 -->
+    <script src="js/jquery.twbsPagination.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-size: 1rem;
+        }
+
+        h1 {
+            margin-bottom: 2rem;
+            font-size: 1.5rem;
+        }
+
+        .custom-label {
+            margin-right: 0.5rem;
+            display: inline-block;
+            width: 8rem;
+            text-align: right;
+        }
+
+        .custom-input {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .btn-frozen {
+            background-color: yellow;
+            color: black;
+        }
+
+        .btn-custom {
+            border-color: transparent;
+        }
+
+        .sms-item {
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 0.5rem;
+            /* 调整每个条目之间的底部边距 */
+            padding-bottom: 1rem;
+            background-color: #f0f8ff;
+            /* 添加浅蓝色背景颜色 */
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .sms-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sms-content .left-content {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sms-content .right-content {
+            margin-left: 0.5rem;
+            /* 调整右侧内容的左边距 */
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                font-size: 0.875rem;
+            }
+
+            h1 {
+                font-size: 1.25rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .custom-label {
+                width: 10rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="text-center">短信消息</h1>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="d-flex align-items-center mb-3">
+                    <label for="phoneNumInput" class="custom-label mr-2">手机：</label>
+                    <input type="text" class="form-control custom-input" id="phoneNumInput" placeholder="输入手机号码">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex align-items-center mb-3">
+                    <button class="btn btn-primary btn-custom mr-4" id="smsQuery" onclick="searchSms()">查询</button>
+                    <div style="width: 2rem;"></div>
+                    <button class="btn btn-primary btn-custom" id="refreshBtn"
+                        onclick="toggleAutoRefresh()">冻结自动刷新</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="sms-list" class="sms-list"></div>
+        <div id="paginationContainer" class="text-center mt-4"></div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let pageSize = 10;
+        let autoRefreshInterval;
+
+        function fetchSms(phoneNum = '', page = 1) {
+            const url = `/api/v1/sms?phone_num=${phoneNum}&page=${page}&limit=${pageSize}`;
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(smsData => {
+                    if (!JSON.stringify(smsData) === '{}') {
+                        throw new Error('Data format exception.');
+                    }
+                    return smsData.data;
+                })
+                .then(data => {
+                    const smsList = data.data || [];
+                    const totalCount = data.total_count || 0;
+                    const smsListDiv = document.getElementById('sms-list');
+                    smsListDiv.innerHTML = '';
+
+                    smsList.forEach(sms => {
+                        const smsItemDiv = document.createElement('div');
+                        smsItemDiv.classList.add('sms-item');
+
+                        const phoneNumP = document.createElement('p');
+                        phoneNumP.textContent = `手机号码: ${sms.phone_num}`;
+                        smsItemDiv.appendChild(phoneNumP);
+
+                        const contextP = document.createElement('p');
+                        contextP.textContent = `短信内容: ${sms.context}`;
+                        smsItemDiv.appendChild(contextP);
+
+                        const smsContentDiv = document.createElement('div');
+                        smsContentDiv.classList.add('sms-content');
+
+                        if (sms.digital_verification_code) {
+                            const codeP = document.createElement('p');
+                            codeP.textContent = `验证码: ${sms.digital_verification_code}`;
+                            smsContentDiv.appendChild(codeP);
+                        }
+
+                        const createTimeP = document.createElement('p');
+                        createTimeP.textContent = `入库时间: ${new Date(sms.create_time).toLocaleString()}`;
+                        smsContentDiv.appendChild(createTimeP);
+
+                        smsItemDiv.appendChild(smsContentDiv);
+                        smsListDiv.appendChild(smsItemDiv);
+                    });
+
+                    $('#paginationContainer').twbsPagination({
+                        totalPages: Math.ceil(totalCount / pageSize),
+                        visiblePages: 5,
+                        onPageClick: function (event, page) {
+                            currentPage = page;
+                            fetchSms(phoneNum, currentPage);
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Failed to fetch sms:', error);
+                });
+        }
+
+        function searchSms() {
+            const phoneNum = document.getElementById('phoneNumInput').value.trim();
+            fetchSms(phoneNum);
+        }
+
+        function toggleAutoRefresh() {
+            const refreshBtn = document.getElementById('refreshBtn');
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                refreshBtn.textContent = '开启自动刷新';
+                refreshBtn.classList.remove('btn-frozen');
+            } else {
+                searchSms();
+                autoRefreshInterval = setInterval(searchSms, 10000);
+                refreshBtn.textContent = '冻结自动刷新';
+                refreshBtn.classList.add('btn-frozen');
+            }
+        }
+
+        toggleAutoRefresh();
+    </script>
+</body>
+
+</html>

@@ -20,13 +20,25 @@ type OrderRepository interface {
 	FindOrders(preOrderID int, passenger string, page int, limit int, log *log.FileLogger) ([]dto.ResponseOrder, int, error)
 }
 
+type SmsRepository interface {
+	FindSms(PhoneNum string, page int, limit int, log *log.FileLogger) ([]dto.ResponseSms, int, error)
+}
 type orderRepository struct {
+	db  *gorm.DB
+	log *log.FileLogger
+}
+
+type smsRepository struct {
 	db  *gorm.DB
 	log *log.FileLogger
 }
 
 func NewOrderRepository(db *gorm.DB, log *log.FileLogger) OrderRepository {
 	return &orderRepository{db, log}
+}
+
+func NewSmsRepository(db *gorm.DB, log *log.FileLogger) SmsRepository {
+	return &smsRepository{db, log}
 }
 
 func (r *orderRepository) FindOrders(preOrderID int, passenger string, page int, limit int, log *log.FileLogger) ([]dto.ResponseOrder, int, error) {
@@ -64,4 +76,38 @@ func (r *orderRepository) FindOrders(preOrderID int, passenger string, page int,
 	}
 
 	return orders, int(totalRows), nil
+}
+
+func (r *smsRepository) FindSms(phoneNum string, page int, limit int, log *log.FileLogger) ([]dto.ResponseSms, int, error) {
+	var sms []dto.ResponseSms
+	var totalRows int64
+
+	query := r.db.Table("t_sms").Select("id, phone_num, context, digital_verification_code, DATE_FORMAT(create_time, '%Y-%m-%d %H:%i:%s') AS create_time")
+	if phoneNum != "" {
+		query = query.Where("phone_num = ?", phoneNum)
+	}
+
+	// 查询满足条件的总数量
+	if err := query.Count(&totalRows).Error; err != nil {
+		log.Error("Error counting rows: %v\n", err)
+	}
+
+	offset := (page - 1) * limit
+	if offset < 0 {
+		offset = 0
+	}
+
+	// 获取 SQL 查询语句
+	// sql := query.Offset(offset).Limit(limit).Order("create_time DESC").Debug().Find(&sms)
+
+	// 打印 SQL 查询语句
+	// fmt.Printf("Executing SQL: %s\n", sql.Debug().Get("sql"))
+
+	err := query.Offset(offset).Limit(limit).Order("create_time DESC").Scan(&sms).Error
+	if err != nil {
+		log.Error("failed to fetch orders: %v", err)
+		return nil, 0, err
+	}
+
+	return sms, int(totalRows), nil
 }

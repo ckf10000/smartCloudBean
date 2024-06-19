@@ -26,7 +26,8 @@ func StartServer(log *log.FileLogger, db *gorm.DB) {
 	// 设置静态文件路由
 	r.Static("/static", "./static")
 
-	orderService := services.NewOrderService(db, log) // 初始化应用服务
+	orderService := services.NewOrderService(db, log) // 初始化订单服务
+	smsService := services.NewSmsService(db, log)     // 初始化短信服务
 
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"code": 200, "message": "查询成功", "data": struct{}{}})
@@ -47,6 +48,25 @@ func StartServer(log *log.FileLogger, db *gorm.DB) {
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"code": 400, "message": err.Error(), "data": paginationDta})
 			log.Error("request for '/api/v1/orders' interface failed, reason: %s", err)
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"code": 200, "message": "查询成功", "data": paginationDta})
+	})
+
+	r.GET("/api/v1/sms", func(c *gin.Context) {
+		phoneNum := c.DefaultQuery("phone_num", "")
+		page := converter.ConvertQueryInt(c.DefaultQuery("page", "1"), 1, 1)
+		limit := converter.ConvertQueryInt(c.DefaultQuery("limit", "10"), 10, 10)
+		sms, total_count, err := smsService.FindSms(phoneNum, page, limit, log)
+		paginationDta := dto.ResponsePaginationSms{
+			Data:       sms,
+			TotalCount: total_count,
+			Page:       page,
+			PageSize:   limit,
+		}
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"code": 400, "message": err.Error(), "data": paginationDta})
+			log.Error("request for '/api/v1/sms' interface failed, reason: %s", err)
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{"code": 200, "message": "查询成功", "data": paginationDta})
