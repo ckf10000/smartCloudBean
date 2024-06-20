@@ -16,15 +16,50 @@
     <style>
         body {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            height: 100vh;
             font-size: 1rem;
+            margin: 0;
+            /* 重置默认的 body 边距 */
+            padding: 0;
+            /* 重置默认的 body 内边距 */
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            /* 控制内容宽度 */
+            padding: 1rem;
+            margin: 1rem;
+            /* 顶部和底部的外边距 */
+            background-color: #f0f0f0;
+            /* 背景色 */
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            /* 添加阴影 */
         }
 
         h1 {
-            margin-bottom: 2rem;
+            margin-top: 1rem;
+            /* 添加上外边距 */
+            margin-bottom: 1rem;
+            /* 添加下外边距 */
             font-size: 1.5rem;
+            text-align: center;
+        }
+
+        .row {
+            justify-content: center;
+            /* 列元素居中显示 */
+            margin-top: 1rem;
+            /* 上外边距 */
+            margin-bottom: 1rem;
+            /* 下外边距 */
+        }
+
+        .col-md-4 {
+            margin-bottom: 1rem;
+            /* 列元素与内容的间距 */
         }
 
         .custom-label {
@@ -51,10 +86,8 @@
         .sms-item {
             border-bottom: 1px solid #ccc;
             margin-bottom: 0.5rem;
-            /* 调整每个条目之间的底部边距 */
             padding-bottom: 1rem;
             background-color: #f0f8ff;
-            /* 添加浅蓝色背景颜色 */
             border-radius: 8px;
             padding: 1rem;
         }
@@ -74,12 +107,21 @@
 
         .sms-content .right-content {
             margin-left: 0.5rem;
-            /* 调整右侧内容的左边距 */
         }
 
-        .table-container {
+        .sms-list {
+            max-height: calc(100vh - 20rem);
+            /* 调整内容高度 */
+            overflow-y: auto;
+            /* 只允许垂直滚动 */
             width: 100%;
-            overflow-x: auto;
+        }
+
+        #paginationContainer {
+            margin-top: 1rem;
+            /* 分页控件与内容底部间距 */
+            margin-bottom: 1rem;
+            /* 分页控件与页面底部间距 */
         }
 
         @media (max-width: 768px) {
@@ -89,7 +131,7 @@
 
             h1 {
                 font-size: 1.25rem;
-                margin-bottom: 1.5rem;
+                margin-bottom: 1rem;
             }
 
             .custom-label {
@@ -101,7 +143,7 @@
 
 <body>
     <div class="container">
-        <h1 class="text-center">短信消息</h1>
+        <h1>短信消息</h1>
         <div class="row">
             <div class="col-md-4">
                 <div class="d-flex align-items-center mb-3">
@@ -119,8 +161,8 @@
             </div>
         </div>
 
-        <div id="sms-list" class="sms-list"></div>
-        <div id="paginationContainer" class="text-center mt-4"></div>
+        <div class="sms-list" id="sms-list"></div>
+        <div class="text-center" id="paginationContainer"></div>
     </div>
 
     <script>
