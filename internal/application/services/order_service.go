@@ -41,6 +41,6 @@ func (s *OrderService) FindOrders(preOrderID int, passenger string, page, limit 
 	return s.orderRepository.FindOrders(preOrderID, passenger, page, limit, log)
 }
 
-func (s *SmsService) FindSms(phoneNum string, page, limit int, log *log.FileLogger) ([]dto.ResponseSms, int, error) {
-	return s.smsRepository.FindSms(phoneNum, page, limit, log)
+func (s *SmsService) FindSms(phoneNum string, searchValue string, page, limit int, log *log.FileLogger) ([]dto.ResponseSms, int, error) {
+	return s.smsRepository.FindSms(phoneNum, searchValue, page, limit, log)
 }

@@ -21,7 +21,7 @@ type OrderRepository interface {
 }
 
 type SmsRepository interface {
-	FindSms(PhoneNum string, page int, limit int, log *log.FileLogger) ([]dto.ResponseSms, int, error)
+	FindSms(PhoneNum string, searchValue string, page int, limit int, log *log.FileLogger) ([]dto.ResponseSms, int, error)
 }
 type orderRepository struct {
 	db  *gorm.DB
@@ -78,13 +78,17 @@ func (r *orderRepository) FindOrders(preOrderID int, passenger string, page int,
 	return orders, int(totalRows), nil
 }
 
-func (r *smsRepository) FindSms(phoneNum string, page int, limit int, log *log.FileLogger) ([]dto.ResponseSms, int, error) {
+func (r *smsRepository) FindSms(phoneNum string, searchValue string, page int, limit int, log *log.FileLogger) ([]dto.ResponseSms, int, error) {
 	var sms []dto.ResponseSms
 	var totalRows int64
 
 	query := r.db.Table("t_sms").Select("id, phone_num, context, digital_verification_code, DATE_FORMAT(create_time, '%Y-%m-%d %H:%i:%s') AS create_time")
 	if phoneNum != "" {
 		query = query.Where("phone_num = ?", phoneNum)
+	}
+
+	if searchValue != "" {
+		query = query.Where("context like ?", "%"+searchValue+"%")
 	}
 
 	// 查询满足条件的总数量

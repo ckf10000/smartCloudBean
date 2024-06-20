@@ -153,6 +153,12 @@
             </div>
             <div class="col-md-4">
                 <div class="d-flex align-items-center mb-3">
+                    <label for="searchValueInput" class="custom-label mr-2">关键字：</label>
+                    <input type="text" class="form-control custom-input" id="searchValueInput" placeholder="输入搜索内容">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex align-items-center mb-3">
                     <button class="btn btn-primary btn-custom mr-4" id="smsQuery" onclick="searchSms()">查询</button>
                     <div style="width: 2rem;"></div>
                     <button class="btn btn-primary btn-custom" id="refreshBtn"
@@ -170,8 +176,8 @@
         let pageSize = 10;
         let autoRefreshInterval;
 
-        function fetchSms(phoneNum = '', page = 1) {
-            const url = `/api/v1/sms?phone_num=${phoneNum}&page=${page}&limit=${pageSize}`;
+        function fetchSms(phoneNum = '', searchValue = '', page = 1) {
+            const url = `/api/v1/sms?phone_num=${phoneNum}&search_value=${searchValue}&page=${page}&limit=${pageSize}`;
 
             fetch(url)
                 .then(response => {
@@ -211,6 +217,10 @@
                             const codeP = document.createElement('p');
                             codeP.textContent = `验证码: ${sms.digital_verification_code}`;
                             smsContentDiv.appendChild(codeP);
+                        } else {
+                            const codeP = document.createElement('p');
+                            codeP.textContent = ``;
+                            smsContentDiv.appendChild(codeP);
                         }
 
                         const createTimeP = document.createElement('p');
@@ -226,7 +236,7 @@
                         visiblePages: 5,
                         onPageClick: function (event, page) {
                             currentPage = page;
-                            fetchSms(phoneNum, currentPage);
+                            fetchSms(phoneNum, searchValue, currentPage);
                         }
                     });
                 })
@@ -237,7 +247,8 @@
 
         function searchSms() {
             const phoneNum = document.getElementById('phoneNumInput').value.trim();
-            fetchSms(phoneNum);
+            const searchValue = document.getElementById('searchValueInput').value.trim();
+            fetchSms(phoneNum, searchValue);
         }
 
         function toggleAutoRefresh() {

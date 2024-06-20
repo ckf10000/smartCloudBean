@@ -55,9 +55,10 @@ func StartServer(log *log.FileLogger, db *gorm.DB) {
 
 	r.GET("/api/v1/sms", func(c *gin.Context) {
 		phoneNum := c.DefaultQuery("phone_num", "")
+		searchValue := c.DefaultQuery("search_value", "")
 		page := converter.ConvertQueryInt(c.DefaultQuery("page", "1"), 1, 1)
 		limit := converter.ConvertQueryInt(c.DefaultQuery("limit", "10"), 10, 10)
-		sms, total_count, err := smsService.FindSms(phoneNum, page, limit, log)
+		sms, total_count, err := smsService.FindSms(phoneNum, searchValue, page, limit, log)
 		paginationDta := dto.ResponsePaginationSms{
 			Data:       sms,
 			TotalCount: total_count,
