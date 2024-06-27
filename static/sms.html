@@ -174,7 +174,8 @@
     <script>
         let currentPage = 1;
         let pageSize = 10;
-        let autoRefreshInterval;
+        // let autoRefreshInterval;
+        let autoRefreshInterval = 1000;
 
         function fetchSms(phoneNum = '', searchValue = '', page = 1) {
             const url = `/api/v1/sms?phone_num=${phoneNum}&search_value=${searchValue}&page=${page}&limit=${pageSize}`;
@@ -253,13 +254,14 @@
 
         function toggleAutoRefresh() {
             const refreshBtn = document.getElementById('refreshBtn');
+            searchSms();
             if (autoRefreshInterval) {
                 clearInterval(autoRefreshInterval);
                 autoRefreshInterval = null;
                 refreshBtn.textContent = '开启自动刷新';
                 refreshBtn.classList.remove('btn-frozen');
             } else {
-                searchSms();
+                // searchSms();
                 autoRefreshInterval = setInterval(searchSms, 10000);
                 refreshBtn.textContent = '冻结自动刷新';
                 refreshBtn.classList.add('btn-frozen');
