@@ -10,68 +10,35 @@
 package web
 
 import (
-	"net/http"
-	"smartCloudBean/internal/application/services"
-	"smartCloudBean/internal/converter"
-	"smartCloudBean/internal/domain/dto"
+	orderApp "smartCloudBean/internal/application/order"
+	smsApp "smartCloudBean/internal/application/sms"
 
-	"github.com/ckf10000/gologger/v3/log"
+	"smartCloudBean/internal/handler"
+
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 )
 
-func StartServer(log *log.FileLogger, db *gorm.DB) {
+func StartServer() {
 	r := gin.Default()
 
 	// 设置静态文件路由
 	r.Static("/static", "./static")
+	findSmsHandler := &handler.FindSmsHandler{
+		SmsService: smsApp.NewSmsService(), // 初始化短信服务
+	}
 
-	orderService := services.NewOrderService(db, log) // 初始化订单服务
-	smsService := services.NewSmsService(db, log)     // 初始化短信服务
+	findOrdersHandler := &handler.FindOrdersHandler{
+		OrderService: orderApp.NewOrderService(), // 初始化订单服务
+	}
 
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"code": 200, "message": "查询成功", "data": struct{}{}})
-	})
+	sendSmsHandler := &handler.SendSmsHandler{
+		SmsService:      smsApp.NewSmsService(),      // 初始化短信服务
+		SmsProxyService: smsApp.NewSmsProxyService(), // 初始化短信代理服务
+	}
 
-	r.GET("/api/v1/orders", func(c *gin.Context) {
-		passenger := c.DefaultQuery("passenger", "")
-		preOrderID := converter.ConvertQueryInt(c.Query("pre_order_id"), -1, 0)
-		page := converter.ConvertQueryInt(c.DefaultQuery("page", "1"), 1, 1)
-		limit := converter.ConvertQueryInt(c.DefaultQuery("limit", "10"), 10, 10)
-		orders, total_count, err := orderService.FindOrders(preOrderID, passenger, page, limit, log)
-		paginationDta := dto.ResponsePaginationOrder{
-			Data:       orders,
-			TotalCount: total_count,
-			Page:       page,
-			PageSize:   limit,
-		}
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"code": 400, "message": err.Error(), "data": paginationDta})
-			log.Error("request for '/api/v1/orders' interface failed, reason: %s", err)
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"code": 200, "message": "查询成功", "data": paginationDta})
-	})
-
-	r.GET("/api/v1/sms", func(c *gin.Context) {
-		phoneNum := c.DefaultQuery("phone_num", "")
-		searchValue := c.DefaultQuery("search_value", "")
-		page := converter.ConvertQueryInt(c.DefaultQuery("page", "1"), 1, 1)
-		limit := converter.ConvertQueryInt(c.DefaultQuery("limit", "10"), 10, 10)
-		sms, total_count, err := smsService.FindSms(phoneNum, searchValue, page, limit, log)
-		paginationDta := dto.ResponsePaginationSms{
-			Data:       sms,
-			TotalCount: total_count,
-			Page:       page,
-			PageSize:   limit,
-		}
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"code": 400, "message": err.Error(), "data": paginationDta})
-			log.Error("request for '/api/v1/sms' interface failed, reason: %s", err)
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"code": 200, "message": "查询成功", "data": paginationDta})
-	})
-
-	r.Run(":8080")
+	r.GET("/api/v1/healthCheck", handler.HealthCheck)
+	r.GET("/api/v1/orders", findOrdersHandler.FindOrdersHandler)
+	r.GET("/api/v1/sms", findSmsHandler.FindSmsHandler)
+	r.POST("/api/v1/smsProxy", sendSmsHandler.SendSmsHandler)
+	r.Run(":8081")
 }

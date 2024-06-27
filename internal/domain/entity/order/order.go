@@ -45,11 +45,6 @@ type OrderEntity struct {
 	UpdateTime        time.Time `json:"update_time"`
 }
 
-// SMS 表示短信对象
-type SMSEntity struct {
-	ID                      int
-	PhoneNum                string
-	Context                 string
-	DigitalVerificationCode string
-	CreateTime              time.Time
+func (OrderEntity) TableName() string {
+	return "t_orders"
 }

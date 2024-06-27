@@ -7,16 +7,19 @@
 * CreateDate:   2024/04/15 11:24:12
 * Copyright ©2011-2024. Hunan xyz Company limited. All rights reserved.
 * *********************************************************************************************************************/
-package middleware
+package apollo
 
 import (
+	"smartCloudBean/internal/common/log"
+
 	"github.com/apolloconfig/agollo/v4"
 	"github.com/apolloconfig/agollo/v4/agcache"
 	"github.com/apolloconfig/agollo/v4/env/config"
-	"github.com/ckf10000/gologger/v3/log"
 )
 
-func GetApolloCache(log *log.FileLogger) agcache.CacheInterface {
+var ApolloCache agcache.CacheInterface
+
+func init() {
 	c := &config.AppConfig{
 		AppID:          "org-system-smart-cloud-bean",
 		Cluster:        "PRO",
@@ -29,7 +32,6 @@ func GetApolloCache(log *log.FileLogger) agcache.CacheInterface {
 	client, _ := agollo.StartWithConfig(func() (*config.AppConfig, error) {
 		return c, nil
 	})
-	log.Info("初始化Apollo配置成功.")
-	cache := client.GetConfigCache(c.NamespaceName)
-	return cache
+	log.Logger.Info("初始化Apollo配置成功.")
+	ApolloCache = client.GetConfigCache(c.NamespaceName)
 }
