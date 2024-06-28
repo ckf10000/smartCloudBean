@@ -88,16 +88,16 @@ func (h *SendSmsHandler) SendSmsHandler(c *gin.Context) {
 		}
 		log.Logger.Info("SMS context insert to the database success")
 		if code != "" {
-			token, err := h.SmsProxyService.SmsProxyRepository.GetToken("yundou", "jlx123")
+			token, err := h.SmsProxyService.SmsProxyRepository.GetToken()
 			if err != nil {
-				log.Logger.Error("Error getting token: %v", err)
+				// log.Logger.Error("Error getting token: %v", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"success": false, "code": 400, "message": err.Error()})
 				return
 			}
 
 			err = h.SmsProxyService.SmsProxyRepository.SendSms(token, context, phone)
 			if err != nil {
-				log.Logger.Error("Error sending SMS: %v", err)
+				// log.Logger.Error("Error sending SMS: %v", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"success": false, "code": 400, "message": err.Error()})
 				return
 			}

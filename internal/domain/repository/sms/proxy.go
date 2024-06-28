@@ -12,17 +12,19 @@ package sms
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"smartCloudBean/internal/common/log"
 	"smartCloudBean/internal/domain/repository/redis"
 	"smartCloudBean/internal/infrastructure/http_client"
+	"smartCloudBean/internal/infrastructure/middleware/apollo"
 	"time"
 )
 
 type SmsProxyRepository interface {
-	GetToken(username, password string) (string, error)
+	GetToken() (string, error)
 	SendSms(token, context, phoneNum string) error
 }
 
@@ -38,8 +40,13 @@ func NewSmsProxyRepository() SmsProxyRepository {
 	}
 }
 
-func (s *smsProxyRepository) GetToken(username, password string) (string, error) {
-	tokenKey := "jlx:" + username + ":token"
+func (s *smsProxyRepository) GetToken() (string, error) {
+	user, _ := apollo.ApolloCache.Get("jlx.api.auth_user")
+	password, _ := apollo.ApolloCache.Get("jlx.api.auth_password")
+	urlAddr, _ := apollo.ApolloCache.Get("jlx.api.get_token_url")
+
+	// 构建 Redis URI
+	tokenKey := fmt.Sprintf("jlx:%s:token", user)
 
 	// 尝试从 Redis 获取 token
 	token, err := s.redisClient.Get(tokenKey)
@@ -48,15 +55,14 @@ func (s *smsProxyRepository) GetToken(username, password string) (string, error)
 		return token, nil
 	}
 
-	log.Logger.Info("Token not found in Redis, requesting new token with username: %s", username)
+	log.Logger.Info("Token not found in Redis, requesting new token with username: %s", user)
 
-	urlAddr := "http://ticket.jiulvxing.com/ticket/auto/getApiUserToken"
 	form := url.Values{}
-	form.Set("userName", username)
-	form.Set("password", password)
+	form.Set("userName", user.(string))
+	form.Set("password", password.(string))
 	formData := []byte(form.Encode())
 
-	response, err := s.httpClient.Post(urlAddr, "application/x-www-form-urlencoded", formData, nil)
+	response, err := s.httpClient.Post(urlAddr.(string), "application/x-www-form-urlencoded", formData, nil)
 	if err != nil {
 		log.Logger.Error("Error getting token: %v", err)
 		return "", err
@@ -92,7 +98,6 @@ func (s *smsProxyRepository) GetToken(username, password string) (string, error)
 	}
 
 	token = result.Data.Token
-
 	// 将 token 存储到 Redis 并设置有效期为 12 小时
 	if err := s.redisClient.Set(tokenKey, token, 12*time.Hour); err != nil {
 		log.Logger.Error("Error setting token in Redis: %v", err)
@@ -104,13 +109,13 @@ func (s *smsProxyRepository) GetToken(username, password string) (string, error)
 }
 
 func (s *smsProxyRepository) SendSms(token, context, phoneNum string) error {
-	url := "http://ticket.jiulvxing.com/purchaseApi/sms"
+	urlAddr, _ := apollo.ApolloCache.Get("jlx.api.send_sms")
 	requestData := map[string]string{"context": context, "phomeNum": phoneNum}
 	jsonData, _ := json.Marshal(requestData)
 
 	headers := map[string]string{"Authorization": token}
 
-	response, err := s.httpClient.Post(url, "application/json", jsonData, headers)
+	response, err := s.httpClient.Post(urlAddr.(string), "application/json", jsonData, headers)
 	if err != nil {
 		log.Logger.Error("Error sending SMS: %v", err)
 		return err
