@@ -16,6 +16,10 @@ type SmsInsert struct {
 	DigitalVerificationCode string `json:"digital_verification_code"`
 }
 
+func (SmsInsert) TableName() string {
+	return "t_sms"
+}
+
 type ResponseSms struct {
 	ID                      int    `json:"id"`
 	PhoneNum                int    `json:"phone_num"`

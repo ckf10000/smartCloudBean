@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"smartCloudBean/internal/common/log"
 	smsDto "smartCloudBean/internal/domain/dto/sms"
-	smsEntity "smartCloudBean/internal/domain/entity/sms"
 	"smartCloudBean/internal/infrastructure/middleware/mysql"
 
 	"github.com/jinzhu/gorm"
@@ -33,13 +32,7 @@ func NewSmsRepository() SmsRepository {
 }
 
 func (r *smsRepository) InsertSms(sms *smsDto.SmsInsert) error {
-	newSMS := smsEntity.Sms{
-		PhoneNum:                sms.PhoneNum,
-		Context:                 sms.Context,
-		DigitalVerificationCode: sms.DigitalVerificationCode,
-	}
-
-	if err := r.db.Create(&newSMS).Error; err != nil {
+	if err := r.db.Table("t_sms").Create(sms).Error; err != nil {
 		return fmt.Errorf("failed to insert sms: %v", err)
 	}
 	return nil
